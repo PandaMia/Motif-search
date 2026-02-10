@@ -44,19 +44,27 @@ class GeneticMotifSearch(BaseMotifSearch):
         """Run genetic algorithm.
 
         Returns:
-            dict: respose with found motifs for each gene, their scores and consensus motif
+            dict: response with found motifs for each gene, their scores and consensus motif
         """
         # run genetic
-        for i in tqdm(range(self.n_iter)):
-            if i == 0:
-                population = self.create_first_population()
-            else:
-                population = self.create_next_generation(population, scores)
+        population = self.create_first_population()
+        scores = self.evaluate_population(population)
+        best_bot = None
+        best_score = float("inf")
+        for _ in tqdm(range(self.n_iter)):
+            min_idx, min_score = min(enumerate(scores), key=lambda pair: pair[1])
+            if min_score < best_score:
+                best_score = min_score
+                best_bot = population[min_idx]
+            population = self.create_next_generation(population, scores)
             scores = self.evaluate_population(population)
-        best_bots = self.choose_survivors(population, scores)
+        if best_bot is None:
+            min_idx, min_score = min(enumerate(scores), key=lambda pair: pair[1])
+            best_score = min_score
+            best_bot = population[min_idx]
 
         # choose best motifs
-        best_motifs = [self.genes[i][start_idx:start_idx+self.k] for i, start_idx in enumerate(best_bots[0])]
+        best_motifs = [self.genes[i][start_idx:start_idx+self.k] for i, start_idx in enumerate(best_bot)]
 
         # get scores for the best motifs and consensus motif
         scores = self.evaluate_best_motifs(best_motifs)

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Motif Search Studio</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="page">
+        <header class="hero">
+            <div class="hero-left">
+                <div class="eyebrow">Motif Search Studio</div>
+                <h1>Discover motifs with precision and clarity</h1>
+                <p class="subtitle">Choose a method, tune the parameters, and visualize best motifs across your gene set in one place.</p>
+            </div>
+            <div class="hero-right">
+                <div class="hero-card">
+                    <div class="hero-stat">
+                        <div class="stat-label">Methods</div>
+                        <div class="stat-value">Greedy, Random, Gibbs, Genetic</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="stat-label">Metrics</div>
+                        <div class="stat-value">Hamming, Entropy</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="stat-label">Preset</div>
+                        <div class="stat-value">DosR dataset</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="grid">
+            <section class="card form-card">
+                <div class="card-header">
+                    <h2>Search Configuration</h2>
+                    <p>Fill in parameters from the `FindMotif` model and provide your gene sequences.</p>
+                </div>
+                <form id="motifForm" class="form">
+                    <div class="field-row">
+                        <label for="method">Method</label>
+                        <select id="method" name="method" required>
+                            <option value="greedy">Greedy</option>
+                            <option value="random">Random</option>
+                            <option value="gibbs" selected>Gibbs</option>
+                            <option value="genetic">Genetic</option>
+                        </select>
+                    </div>
+
+                    <div class="field-row">
+                        <label for="metric">Metric</label>
+                        <select id="metric" name="metric">
+                            <option value="hamming" selected>Hamming</option>
+                            <option value="entropy">Entropy</option>
+                        </select>
+                    </div>
+
+                    <div class="field-row">
+                        <label for="k">Motif Length (k)</label>
+                        <input id="k" name="k" type="number" min="2" value="12" required />
+                    </div>
+
+                    <div class="field-row optional" data-field="n_iter">
+                        <label for="n_iter">Iterations (n_iter)</label>
+                        <input id="n_iter" name="n_iter" type="number" min="10" value="1000" />
+                    </div>
+
+                    <div class="field-row optional" data-field="n_bots">
+                        <label for="n_bots">Population Size (n_bots)</label>
+                        <input id="n_bots" name="n_bots" type="number" min="10" value="100" />
+                    </div>
+
+                    <div class="field-row optional" data-field="n_surv">
+                        <label for="n_surv">Survivors (n_surv)</label>
+                        <input id="n_surv" name="n_surv" type="number" min="2" value="20" />
+                    </div>
+
+                    <div class="field-row optional" data-field="mutation_coef">
+                        <label for="mutation_coef">Mutation Coefficient</label>
+                        <input id="mutation_coef" name="mutation_coef" type="number" min="0" max="1" step="0.01" value="0.15" />
+                    </div>
+
+                    <div class="field-group">
+                        <div class="group-header">
+                            <div>
+                                <h3>Gene Sequences</h3>
+                                <p>Paste one gene per line or load the DosR preset.</p>
+                            </div>
+                            <div class="preset-controls">
+                                <select id="preset" name="preset">
+                                    <option value="">No preset</option>
+                                    <option value="dosr">DosR (data/DosR.txt)</option>
+                                </select>
+                                <button type="button" id="loadPreset" class="btn ghost">Load preset</button>
+                            </div>
+                        </div>
+                        <textarea id="genes" name="genes" rows="10" placeholder="Paste gene sequences here..."></textarea>
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit" class="btn primary">Run motif search</button>
+                        <button type="button" id="clearForm" class="btn ghost">Clear</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="card results-card">
+                <div class="card-header">
+                    <h2>Results</h2>
+                    <p>Review consensus motif and highlighted best motifs per gene.</p>
+                </div>
+                <div id="status" class="status empty">
+                    No results yet. Run a search to see motifs highlighted across your genes.
+                </div>
+                <div id="results" class="results hidden">
+                    <div class="result-summary">
+                        <div>
+                            <div class="label">Consensus Sequence</div>
+                            <div id="consensus" class="consensus"></div>
+                        </div>
+                        <div class="score-panel">
+                            <div class="label">Scores</div>
+                            <div id="scores" class="scores"></div>
+                        </div>
+                    </div>
+                    <div class="gene-results">
+                        <div class="label">Genes with Best Motifs</div>
+                        <div id="geneList" class="gene-list"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById("motifForm");
+        const methodSelect = document.getElementById("method");
+        const genesInput = document.getElementById("genes");
+        const statusEl = document.getElementById("status");
+        const resultsEl = document.getElementById("results");
+        const consensusEl = document.getElementById("consensus");
+        const scoresEl = document.getElementById("scores");
+        const geneListEl = document.getElementById("geneList");
+
+        const optionalFields = {
+            n_iter: document.querySelector('[data-field="n_iter"]'),
+            n_bots: document.querySelector('[data-field="n_bots"]'),
+            n_surv: document.querySelector('[data-field="n_surv"]'),
+            mutation_coef: document.querySelector('[data-field="mutation_coef"]')
+        };
+
+        function updateOptionalFields() {
+            const method = methodSelect.value;
+            optionalFields.n_iter.classList.toggle("hidden", !(method === "random" || method === "gibbs" || method === "genetic"));
+            optionalFields.n_bots.classList.toggle("hidden", method !== "genetic");
+            optionalFields.n_surv.classList.toggle("hidden", method !== "genetic");
+            optionalFields.mutation_coef.classList.toggle("hidden", method !== "genetic");
+        }
+
+        methodSelect.addEventListener("change", updateOptionalFields);
+        updateOptionalFields();
+
+        function escapeHtml(value) {
+            return value
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        function highlightGene(gene, motif) {
+            const index = gene.indexOf(motif);
+            if (index === -1) {
+                return `<span class="gene-seq">${escapeHtml(gene)}</span>`;
+            }
+            const before = escapeHtml(gene.slice(0, index));
+            const mid = escapeHtml(gene.slice(index, index + motif.length));
+            const after = escapeHtml(gene.slice(index + motif.length));
+            return `${before}<span class="motif">${mid}</span>${after}`;
+        }
+
+        function renderScores(scores) {
+            if (!scores) return "";
+            const entries = Object.entries(scores).map(([key, value]) => {
+                return `<div class="score-item"><span>${escapeHtml(key)}</span><strong>${escapeHtml(String(value))}</strong></div>`;
+            });
+            return entries.join("");
+        }
+
+        function setStatus(message, tone = "") {
+            statusEl.textContent = message;
+            statusEl.className = `status ${tone}`.trim();
+            statusEl.classList.remove("hidden");
+        }
+
+        function showResults() {
+            statusEl.classList.add("hidden");
+            resultsEl.classList.remove("hidden");
+        }
+
+        function clearResults() {
+            resultsEl.classList.add("hidden");
+            consensusEl.textContent = "";
+            scoresEl.innerHTML = "";
+            geneListEl.innerHTML = "";
+        }
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            clearResults();
+            setStatus("Running motif search...", "loading");
+
+            const genes = genesInput.value
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+
+            if (genes.length === 0) {
+                setStatus("Please provide at least one gene sequence.", "error");
+                return;
+            }
+
+            const method = methodSelect.value;
+            const metric = document.getElementById("metric").value;
+            const k = Number.parseInt(document.getElementById("k").value, 10);
+
+            const payload = { genes, k, method, metric };
+
+            if (method === "random" || method === "gibbs" || method === "genetic") {
+                payload.n_iter = Number.parseInt(document.getElementById("n_iter").value, 10);
+            }
+            if (method === "genetic") {
+                payload.n_bots = Number.parseInt(document.getElementById("n_bots").value, 10);
+                payload.n_surv = Number.parseInt(document.getElementById("n_surv").value, 10);
+                payload.mutation_coef = Number.parseFloat(document.getElementById("mutation_coef").value);
+            }
+
+            try {
+                const response = await fetch("/find-motif", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || "Failed to run motif search");
+                }
+
+                const data = await response.json();
+                showResults();
+
+                consensusEl.textContent = data.consensus || "-";
+                scoresEl.innerHTML = renderScores(data.scores || {});
+
+                const motifList = data.best_motifs || [];
+                geneListEl.innerHTML = genes.map((gene, index) => {
+                    const motif = motifList[index] || "";
+                    const highlighted = motif ? highlightGene(gene, motif) : escapeHtml(gene);
+                    return `
+                        <div class="gene-row">
+                            <div class="gene-meta">
+                                <span class="gene-label">Gene ${index + 1}</span>
+                                ${motif ? `<span class="motif-pill">${escapeHtml(motif)}</span>` : ""}
+                            </div>
+                            <div class="gene-seq">${highlighted}</div>
+                        </div>
+                    `;
+                }).join("");
+            } catch (error) {
+                setStatus(error.message || "Unexpected error", "error");
+            }
+        });
+
+        document.getElementById("clearForm").addEventListener("click", () => {
+            form.reset();
+            genesInput.value = "";
+            updateOptionalFields();
+            clearResults();
+            setStatus("No results yet. Run a search to see motifs highlighted across your genes.", "empty");
+        });
+
+        document.getElementById("loadPreset").addEventListener("click", async () => {
+            const preset = document.getElementById("preset").value;
+            if (!preset) return;
+
+            try {
+                setStatus("Loading preset...", "loading");
+                const response = await fetch(`/preset/${preset}`);
+                if (!response.ok) {
+                    throw new Error("Unable to load preset");
+                }
+                const text = await response.text();
+                genesInput.value = text.trim();
+                setStatus("Preset loaded. You can now run the search.", "success");
+            } catch (error) {
+                setStatus(error.message || "Unable to load preset", "error");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -7,7 +7,7 @@ from motif_search.gibbs_search import GibbsMotifSearch
 
 
 class Manager():
-    def __init__(self, request_data: base_models.FindMofif):
+    def __init__(self, request_data: base_models.FindMotif):
         self.genes = request_data.genes
         self.k = request_data.k
         self.metric = request_data.metric
