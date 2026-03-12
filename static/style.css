@@ -67,23 +67,22 @@ h1 {
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
     display: grid;
-    gap: 16px;
+    gap: 10px;
 }
 
-.hero-stat {
-    display: grid;
-    gap: 4px;
-}
-
-.stat-label {
+.hero-card-label {
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: var(--muted);
+    color: var(--accent-dark);
+    font-weight: 600;
 }
 
-.stat-value {
-    font-weight: 600;
+.hero-card-text {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    font-size: 1rem;
 }
 
 .grid {
@@ -185,6 +184,16 @@ textarea {
     display: flex;
     gap: 10px;
     align-items: center;
+}
+
+.preset-description {
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: #fffaf4;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .actions {

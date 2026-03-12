@@ -16,18 +16,10 @@
             </div>
             <div class="hero-right">
                 <div class="hero-card">
-                    <div class="hero-stat">
-                        <div class="stat-label">Methods</div>
-                        <div class="stat-value">Greedy, Random, Gibbs, Genetic</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="stat-label">Metrics</div>
-                        <div class="stat-value">Hamming, Entropy</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="stat-label">Preset</div>
-                        <div class="stat-value">DosR dataset</div>
-                    </div>
+                    <div class="hero-card-label">Service</div>
+                    <p class="hero-card-text">
+                        Motif Search Studio helps you test motif-finding algorithms against DNA sequence sets, compare results, and inspect the strongest candidate motifs in a single workflow.
+                    </p>
                 </div>
             </div>
         </header>
@@ -86,16 +78,23 @@
                         <div class="group-header">
                             <div>
                                 <h3>Gene Sequences</h3>
-                                <p>Paste one gene per line or load the DosR preset.</p>
+                                <p>Paste one gene per line or load one of the available dataset presets.</p>
                             </div>
                             <div class="preset-controls">
                                 <select id="preset" name="preset">
-                                    <option value="">No preset</option>
-                                    <option value="dosr">DosR (data/DosR.txt)</option>
+                                    {% if presets %}
+                                    <option value="" selected>No preset</option>
+                                        {% for preset in presets %}
+                                    <option value="{{ preset.slug }}">{{ preset.name }}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                    <option value="">No presets available</option>
+                                    {% endif %}
                                 </select>
                                 <button type="button" id="loadPreset" class="btn ghost">Load preset</button>
                             </div>
                         </div>
+                        <div id="presetDescription" class="preset-description hidden"></div>
                         <textarea id="genes" name="genes" rows="10" placeholder="Paste gene sequences here..."></textarea>
                     </div>
 
@@ -143,6 +142,9 @@
         const consensusEl = document.getElementById("consensus");
         const scoresEl = document.getElementById("scores");
         const geneListEl = document.getElementById("geneList");
+        const presetSelect = document.getElementById("preset");
+        const presetDescriptionEl = document.getElementById("presetDescription");
+        const presets = {{ presets | tojson }};
 
         const optionalFields = {
             n_iter: document.querySelector('[data-field="n_iter"]'),
@@ -150,6 +152,9 @@
             n_surv: document.querySelector('[data-field="n_surv"]'),
             mutation_coef: document.querySelector('[data-field="mutation_coef"]')
         };
+        const presetMap = Object.fromEntries(
+            presets.map((preset) => [preset.slug, preset])
+        );
 
         function updateOptionalFields() {
             const method = methodSelect.value;
@@ -161,6 +166,8 @@
 
         methodSelect.addEventListener("change", updateOptionalFields);
         updateOptionalFields();
+        presetSelect.addEventListener("change", updatePresetDescription);
+        updatePresetDescription();
 
         function escapeHtml(value) {
             return value
@@ -169,6 +176,19 @@
                 .replaceAll(">", "&gt;")
                 .replaceAll('"', "&quot;")
                 .replaceAll("'", "&#39;");
+        }
+
+        function updatePresetDescription() {
+            const selectedPreset = presetMap[presetSelect.value];
+
+            if (!selectedPreset) {
+                presetDescriptionEl.textContent = "";
+                presetDescriptionEl.classList.add("hidden");
+                return;
+            }
+
+            presetDescriptionEl.textContent = selectedPreset.description;
+            presetDescriptionEl.classList.remove("hidden");
         }
 
         function highlightGene(gene, motif) {
@@ -279,12 +299,13 @@
             form.reset();
             genesInput.value = "";
             updateOptionalFields();
+            updatePresetDescription();
             clearResults();
             setStatus("No results yet. Run a search to see motifs highlighted across your genes.", "empty");
         });
 
         document.getElementById("loadPreset").addEventListener("click", async () => {
-            const preset = document.getElementById("preset").value;
+            const preset = presetSelect.value;
             if (!preset) return;
 
             try {
@@ -293,8 +314,15 @@
                 if (!response.ok) {
                     throw new Error("Unable to load preset");
                 }
-                const text = await response.text();
-                genesInput.value = text.trim();
+                const presetData = await response.json();
+                const dna = Array.isArray(presetData.DNA)
+                    ? presetData.DNA
+                    : String(presetData.DNA || "")
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter((line) => line.length > 0);
+
+                genesInput.value = dna.join("\n");
                 setStatus("Preset loaded. You can now run the search.", "success");
             } catch (error) {
                 setStatus(error.message || "Unable to load preset", "error");

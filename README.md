@@ -1,13 +1,13 @@
 # Motif-search
 
-A small FastAPI service for motif discovery in DNA sequences. It exposes a UI and API to run Greedy, Randomized, Gibbs, or Genetic motif search and returns best motifs per gene along with consensus and scores.
+FastAPI service for motif discovery in DNA sequences. It exposes a UI and API to run Greedy, Randomized, Gibbs, or Genetic motif search and returns best motifs per gene along with consensus and scores.
 
 ## What it does
 - Accepts a list of gene sequences and motif length `k`.
 - Lets you choose search method and metric.
 - Supports additional parameters for randomized/gibbs/genetic search.
 - Returns `best_motifs`, `scores`, and `consensus`.
-- UI includes a preset loader for `data/DosR.txt`.
+- UI includes dynamic preset loading from `data/*.json`, where each preset stores metadata plus a `DNA` field with the sequences.
 
 ## API
 - `POST /find-motif` with JSON payload matching `FindMotif`.
@@ -56,4 +56,4 @@ PORT=8000 python app.py
 - `motif_search/` - search algorithm implementations
 - `templates/index.html` - UI
 - `static/style.css` - UI styles
-- `data/DosR.txt` - preset gene sequences
+- `data/*.json` - preset metadata and `DNA` sequence payloads used by the UI
