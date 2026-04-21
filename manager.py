@@ -4,6 +4,7 @@ from motif_search.greedy_search import GreedyMotifSearch
 from motif_search.random_search import RandomMotifSearch
 from motif_search.genetic_search import GeneticMotifSearch
 from motif_search.gibbs_search import GibbsMotifSearch
+from motif_search.em_search import EMMotifSearch
 
 
 class Manager():
@@ -12,6 +13,7 @@ class Manager():
         self.k = request_data.k
         self.metric = request_data.metric
         self.params = request_data
+        self.genetic_params = request_data.genetic_params or base_models.GeneticParams()
 
     @error_handler
     def find_motif(self):
@@ -28,6 +30,8 @@ class Manager():
             self.prepare_gibbs()
         elif self.params.method == "genetic":
             self.prepare_genetic()
+        elif self.params.method == "em":
+            self.prepare_em()
         response = self.search.run_search()
         return response
     
@@ -58,9 +62,9 @@ class Manager():
     
     def prepare_genetic(self):
         n_iter = self.params.n_iter 
-        n_bots = self.params.n_bots 
-        n_surv = self.params.n_surv 
-        mutation_coef = self.params.mutation_coef
+        n_bots = self.genetic_params.n_bots 
+        n_surv = self.genetic_params.n_surv 
+        mutation_coef = self.genetic_params.mutation_coef
         self.search = GeneticMotifSearch(
             self.genes, 
             self.k, 
@@ -69,4 +73,15 @@ class Manager():
             n_bots, 
             n_surv, 
             mutation_coef
+        )
+
+    def prepare_em(self):
+        n_iter = self.params.n_iter
+        n_starts = self.params.n_starts
+        self.search = EMMotifSearch(
+            self.genes,
+            self.k,
+            self.metric,
+            n_iter,
+            n_starts,
         )

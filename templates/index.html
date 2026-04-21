@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Motif Search Studio</title>
-    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="stylesheet" href="/static/style.css?v={{ style_version }}" />
 </head>
 <body>
     <div class="page">
@@ -32,17 +32,24 @@
                 </div>
                 <form id="motifForm" class="form">
                     <div class="field-row">
-                        <label for="method">Method</label>
+                        <label for="method" class="label-with-info">
+                            <span>Method</span>
+                            <span class="info-icon" tabindex="0" title="Choose which motif-search algorithm to run." aria-label="Choose which motif-search algorithm to run.">i</span>
+                        </label>
                         <select id="method" name="method" required>
                             <option value="greedy">Greedy</option>
                             <option value="random">Random</option>
                             <option value="gibbs" selected>Gibbs</option>
                             <option value="genetic">Genetic</option>
+                            <option value="em">Expectation Maximization (EM)</option>
                         </select>
                     </div>
 
                     <div class="field-row">
-                        <label for="metric">Metric</label>
+                        <label for="metric" class="label-with-info">
+                            <span>Metric</span>
+                            <span class="info-icon" tabindex="0" title="Select how candidate motifs are scored and compared." aria-label="Select how candidate motifs are scored and compared.">i</span>
+                        </label>
                         <select id="metric" name="metric">
                             <option value="hamming" selected>Hamming</option>
                             <option value="entropy">Entropy</option>
@@ -50,28 +57,60 @@
                     </div>
 
                     <div class="field-row">
-                        <label for="k">Motif Length (k)</label>
+                        <label for="k" class="label-with-info">
+                            <span>Motif Length</span>
+                            <span class="info-icon" tabindex="0" title="Set the number of nucleotides in the motif to discover." aria-label="Set the number of nucleotides in the motif to discover.">i</span>
+                        </label>
                         <input id="k" name="k" type="number" min="2" value="12" required />
                     </div>
 
-                    <div class="field-row optional" data-field="n_iter">
-                        <label for="n_iter">Iterations (n_iter)</label>
+                        <div class="field-row optional" data-field="n_iter">
+                            <label for="n_iter" class="label-with-info">
+                                <span>Iterations</span>
+                                <span class="info-icon" tabindex="0" title="How many optimization steps the selected stochastic method will run." aria-label="How many optimization steps the selected stochastic method will run.">i</span>
+                            </label>
                         <input id="n_iter" name="n_iter" type="number" min="10" value="1000" />
                     </div>
 
-                    <div class="field-row optional" data-field="n_bots">
-                        <label for="n_bots">Population Size (n_bots)</label>
-                        <input id="n_bots" name="n_bots" type="number" min="10" value="100" />
+                        <div class="field-row optional" data-field="n_starts">
+                            <label for="n_starts" class="label-with-info">
+                                <span>Random Starts</span>
+                                <span class="info-icon" tabindex="0" title="How many random initializations EM will try before keeping the best result." aria-label="How many random initializations EM will try before keeping the best result.">i</span>
+                            </label>
+                        <input id="n_starts" name="n_starts" type="number" min="1" value="20" />
                     </div>
 
-                    <div class="field-row optional" data-field="n_surv">
-                        <label for="n_surv">Survivors (n_surv)</label>
-                        <input id="n_surv" name="n_surv" type="number" min="2" value="20" />
-                    </div>
+                    <div id="geneticParamsGroup" class="field-group genetic-params-group">
+                        <div class="group-header">
+                            <div>
+                                <h3>genetic_params</h3>
+                                <p>Grouped controls for genetic-only search parameters.</p>
+                            </div>
+                        </div>
 
-                    <div class="field-row optional" data-field="mutation_coef">
-                        <label for="mutation_coef">Mutation Coefficient</label>
-                        <input id="mutation_coef" name="mutation_coef" type="number" min="0" max="1" step="0.01" value="0.15" />
+                        <div class="field-row optional" data-field="n_bots">
+                            <label for="n_bots" class="label-with-info">
+                                <span>Population Size</span>
+                                <span class="info-icon" tabindex="0" title="Number of candidate solutions maintained by the genetic algorithm each generation." aria-label="Number of candidate solutions maintained by the genetic algorithm each generation.">i</span>
+                            </label>
+                            <input id="n_bots" name="n_bots" type="number" min="10" value="100" />
+                        </div>
+
+                        <div class="field-row optional" data-field="n_surv">
+                            <label for="n_surv" class="label-with-info">
+                                <span>Survivors</span>
+                                <span class="info-icon" tabindex="0" title="Top-scoring candidates kept after each genetic generation." aria-label="Top-scoring candidates kept after each genetic generation.">i</span>
+                            </label>
+                            <input id="n_surv" name="n_surv" type="number" min="2" value="20" />
+                        </div>
+
+                        <div class="field-row optional" data-field="mutation_coef">
+                            <label for="mutation_coef" class="label-with-info">
+                                <span>Mutation Coefficient</span>
+                                <span class="info-icon" tabindex="0" title="Chance that a gene position mutates when creating a new genetic candidate." aria-label="Chance that a gene position mutates when creating a new genetic candidate.">i</span>
+                            </label>
+                            <input id="mutation_coef" name="mutation_coef" type="number" min="0" max="1" step="0.01" value="0.15" />
+                        </div>
                     </div>
 
                     <div class="field-group">
@@ -91,7 +130,6 @@
                                     <option value="">No presets available</option>
                                     {% endif %}
                                 </select>
-                                <button type="button" id="loadPreset" class="btn ghost">Load preset</button>
                             </div>
                         </div>
                         <div id="presetDescription" class="preset-description hidden"></div>
@@ -134,6 +172,7 @@
     </div>
 
     <script>
+        const STATUS_EMPTY_MESSAGE = "No results yet. Run a search to see motifs highlighted across your genes.";
         const form = document.getElementById("motifForm");
         const methodSelect = document.getElementById("method");
         const genesInput = document.getElementById("genes");
@@ -144,10 +183,12 @@
         const geneListEl = document.getElementById("geneList");
         const presetSelect = document.getElementById("preset");
         const presetDescriptionEl = document.getElementById("presetDescription");
+        const geneticParamsGroup = document.getElementById("geneticParamsGroup");
         const presets = {{ presets | tojson }};
 
         const optionalFields = {
             n_iter: document.querySelector('[data-field="n_iter"]'),
+            n_starts: document.querySelector('[data-field="n_starts"]'),
             n_bots: document.querySelector('[data-field="n_bots"]'),
             n_surv: document.querySelector('[data-field="n_surv"]'),
             mutation_coef: document.querySelector('[data-field="mutation_coef"]')
@@ -158,7 +199,9 @@
 
         function updateOptionalFields() {
             const method = methodSelect.value;
-            optionalFields.n_iter.classList.toggle("hidden", !(method === "random" || method === "gibbs" || method === "genetic"));
+            geneticParamsGroup.classList.toggle("hidden", method !== "genetic");
+            optionalFields.n_iter.classList.toggle("hidden", !(method === "random" || method === "gibbs" || method === "genetic" || method === "em"));
+            optionalFields.n_starts.classList.toggle("hidden", method !== "em");
             optionalFields.n_bots.classList.toggle("hidden", method !== "genetic");
             optionalFields.n_surv.classList.toggle("hidden", method !== "genetic");
             optionalFields.mutation_coef.classList.toggle("hidden", method !== "genetic");
@@ -166,7 +209,10 @@
 
         methodSelect.addEventListener("change", updateOptionalFields);
         updateOptionalFields();
-        presetSelect.addEventListener("change", updatePresetDescription);
+        presetSelect.addEventListener("change", async () => {
+            updatePresetDescription();
+            await loadSelectedPreset();
+        });
         updatePresetDescription();
 
         function escapeHtml(value) {
@@ -248,14 +294,21 @@
             const k = Number.parseInt(document.getElementById("k").value, 10);
 
             const payload = { genes, k, method, metric };
+            const geneticParams = {};
 
-            if (method === "random" || method === "gibbs" || method === "genetic") {
+            if (method === "random" || method === "gibbs" || method === "genetic" || method === "em") {
                 payload.n_iter = Number.parseInt(document.getElementById("n_iter").value, 10);
             }
+            if (method === "em") {
+                payload.n_starts = Number.parseInt(document.getElementById("n_starts").value, 10);
+            }
             if (method === "genetic") {
-                payload.n_bots = Number.parseInt(document.getElementById("n_bots").value, 10);
-                payload.n_surv = Number.parseInt(document.getElementById("n_surv").value, 10);
-                payload.mutation_coef = Number.parseFloat(document.getElementById("mutation_coef").value);
+                geneticParams.n_bots = Number.parseInt(document.getElementById("n_bots").value, 10);
+                geneticParams.n_surv = Number.parseInt(document.getElementById("n_surv").value, 10);
+                geneticParams.mutation_coef = Number.parseFloat(document.getElementById("mutation_coef").value);
+            }
+            if (Object.keys(geneticParams).length > 0) {
+                payload.genetic_params = geneticParams;
             }
 
             try {
@@ -301,12 +354,17 @@
             updateOptionalFields();
             updatePresetDescription();
             clearResults();
-            setStatus("No results yet. Run a search to see motifs highlighted across your genes.", "empty");
+            setStatus(STATUS_EMPTY_MESSAGE, "empty");
         });
 
-        document.getElementById("loadPreset").addEventListener("click", async () => {
+        async function loadSelectedPreset() {
             const preset = presetSelect.value;
-            if (!preset) return;
+            clearResults();
+            if (!preset) {
+                genesInput.value = "";
+                setStatus(STATUS_EMPTY_MESSAGE, "empty");
+                return;
+            }
 
             try {
                 setStatus("Loading preset...", "loading");
@@ -327,7 +385,7 @@
             } catch (error) {
                 setStatus(error.message || "Unable to load preset", "error");
             }
-        });
+        }
     </script>
 </body>
 </html>

@@ -21,10 +21,17 @@ class BaseMotifSearch():
             k (int): length of the motif
             metric (str): metric to evaluate found motifs
         """
+        if not genes:
+            raise ValueError("At least one gene sequence is required.")
+        if any(len(gene) < k for gene in genes):
+            raise ValueError("All gene sequences must be at least as long as k.")
+
         self.genes = genes                                 # list of genes to search motifs
         self.k = k                                         # length of the motif
         self.n_genes = len(genes)                          # number of genes
+        self.gene_lens = [len(gene) for gene in genes]     # length of each gene
         self.gene_len = len(genes[0])                      # length of the single gene
+        self.last_indexes = [gene_len - k for gene_len in self.gene_lens]
         self.scoring_function = SCORING_FUNCTIONS[metric]  # function to evaluate found motifs
 
     @error_handler

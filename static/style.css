@@ -124,6 +124,66 @@ h1 {
     font-size: 0.95rem;
 }
 
+.label-with-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(199, 66, 26, 0.35);
+    background: #fff2e7;
+    color: var(--accent-dark);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: help;
+    box-shadow: 0 2px 8px rgba(199, 66, 26, 0.1);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.info-icon:hover,
+.info-icon:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(199, 66, 26, 0.16);
+}
+
+.info-icon::after {
+    content: attr(title);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: 220px;
+    max-width: 280px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #1f1c18;
+    color: #fffaf4;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    font-size: 0.78rem;
+    font-weight: 400;
+    line-height: 1.4;
+    z-index: 10;
+}
+
+.info-icon:hover::after,
+.info-icon:focus-visible::after {
+    opacity: 1;
+}
+
 input,
 select,
 textarea {
@@ -159,6 +219,10 @@ textarea {
     background: var(--bg-accent);
     display: grid;
     gap: 12px;
+}
+
+.genetic-params-group {
+    gap: 16px;
 }
 
 .group-header {
@@ -382,5 +446,13 @@ textarea {
     .btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .info-icon::after {
+        left: 0;
+        top: calc(100% + 10px);
+        transform: none;
+        min-width: 180px;
+        max-width: min(260px, 70vw);
     }
 }

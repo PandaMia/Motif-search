@@ -27,7 +27,8 @@ app.mount(
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     presets = [{key: value for key, value in preset.items() if key != "path"} for preset in load_presets(BASE_DIR)]
-    context = {"request": request, "presets": presets}
+    style_version = int(Path(BASE_DIR, "static", "style.css").stat().st_mtime)
+    context = {"request": request, "presets": presets, "style_version": style_version}
     return TEMPLATES.TemplateResponse("index.html", context)
 
 

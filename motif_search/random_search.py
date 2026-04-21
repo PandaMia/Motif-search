@@ -26,7 +26,6 @@ class RandomMotifSearch(BaseMotifSearch):
         """
         super().__init__(genes, k, metric)        # initialize BaseMotifSearch
         self.n_iter = n_iter                      # number of epochs
-        self.last_index = self.gene_len - self.k  # last possible index for motif start
 
     @error_handler
     def run_search(self) -> dict:
@@ -86,8 +85,8 @@ class RandomMotifSearch(BaseMotifSearch):
             List[str]: random motifs
         """
         random_motifs = []
-        for i in range(self.n_genes):
-            index = random.randint(0, self.last_index)
+        for i, last_index in enumerate(self.last_indexes):
+            index = random.randint(0, last_index)
             motif = self.genes[i][index: index + self.k]
             random_motifs.append(motif)
         return random_motifs

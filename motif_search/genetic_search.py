@@ -37,9 +37,8 @@ class GeneticMotifSearch(BaseMotifSearch):
         self.n_surv = n_surv                      # number of survivors
         self.n_new_bots = n_bots - n_surv         # number of new bots
         self.mutation_coef = mutation_coef        # mutation coefficient
-        self.last_index = self.gene_len - self.k  # last possible index for motif start
 
-    error_handler
+    @error_handler
     def run_search(self) -> dict:
         """Run genetic algorithm.
 
@@ -80,8 +79,8 @@ class GeneticMotifSearch(BaseMotifSearch):
     
     def create_random_bot(self):
         bot = [None] * self.n_genes
-        for i in range(self.n_genes):
-            bot[i] = random.randint(0, self.last_index)
+        for i, last_index in enumerate(self.last_indexes):
+            bot[i] = random.randint(0, last_index)
         return bot
     
     def create_first_population(self):
@@ -106,7 +105,7 @@ class GeneticMotifSearch(BaseMotifSearch):
             new_bot = [None] * self.n_genes
             for i in range(self.n_genes):
                 if random.random() < self.mutation_coef:
-                    new_bot[i] = random.randint(0, self.last_index)
+                    new_bot[i] = random.randint(0, self.last_indexes[i])
                 elif random.random() < 0.5:
                     new_bot[i] = parent_1[i]
                 else:
