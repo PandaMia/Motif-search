@@ -31,6 +31,35 @@ body {
     padding: 48px 24px 80px;
 }
 
+.top-links {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.top-links a {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--accent-dark);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(23, 22, 20, 0.06);
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.top-links a:hover {
+    background: #fff2e7;
+    box-shadow: 0 12px 24px rgba(23, 22, 20, 0.08);
+    transform: translateY(-1px);
+}
+
 .hero {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -427,6 +456,11 @@ textarea {
 @media (max-width: 720px) {
     .page {
         padding: 32px 18px 64px;
+    }
+
+    .top-links {
+        justify-content: flex-start;
+        margin-bottom: 16px;
     }
 
     .hero {
