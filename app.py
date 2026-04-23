@@ -28,8 +28,12 @@ app.mount(
 async def index(request: Request):
     presets = [{key: value for key, value in preset.items() if key != "path"} for preset in load_presets(BASE_DIR)]
     style_version = int(Path(BASE_DIR, "static", "style.css").stat().st_mtime)
-    context = {"request": request, "presets": presets, "style_version": style_version}
-    return TEMPLATES.TemplateResponse("index.html", context)
+    context = {"presets": presets, "style_version": style_version}
+    return TEMPLATES.TemplateResponse(
+        request=request,
+        name="index.html",
+        context=context,
+    )
 
 
 @app.post("/find-motif", response_model=base_models.FindMotifResponse)
