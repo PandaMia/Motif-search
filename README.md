@@ -2,6 +2,8 @@
 
 FastAPI service for motif discovery in DNA sequences. It exposes a UI and API to run Greedy, Randomized, Gibbs, Genetic, or EM-based motif search and returns best motifs per gene along with consensus and scores.
 
+Live app: [https://motif.pandamia.org/](https://motif.pandamia.org/)
+
 Method descriptions: see [METHODS.md](METHODS.md).
 
 ## What it does
