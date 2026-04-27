@@ -1,6 +1,6 @@
 # Deploy
 
-Short deployment guide for `motif-search` on a DigitalOcean Droplet using Docker Compose and Caddy.
+Short deployment guide for `motif-search` on a DigitalOcean Droplet using Docker Compose, with Caddy running on the host.
 
 ## 1. Connect to the server
 
@@ -23,9 +23,13 @@ docker --version
 docker compose version
 ```
 
-## 4. First launch over HTTP
+## 4. Start the application container
 
-The current `Caddyfile` is already configured for plain HTTP on `:80`, so no changes are needed for the first launch.
+The application is published only to the host loopback interface:
+
+```text
+127.0.0.1:18080 -> container:8080
+```
 
 Start the service:
 
@@ -40,41 +44,32 @@ docker compose ps
 docker compose logs -f
 ```
 
-After that, the service should be available by server IP:
-
-```text
-http://YOUR_SERVER_IP
-```
-
-## 5. Switch to a domain and HTTPS
-
-1. Create an `A` record and point it to your server IP.
-2. Open `Caddyfile`.
-3. Replace this line:
-
-```caddy
-:80 {
-```
-
-with:
-
-```caddy
-your-domain.com {
-```
-
-or:
-
-```caddy
-motif.example.com {
-```
-
-4. Reload the containers:
+Optional local check on the server:
 
 ```bash
-docker compose up -d
+curl -I http://127.0.0.1:18080
 ```
 
-Caddy will automatically issue and renew the TLS certificate.
+## 5. Configure host Caddy
+
+Add this site block to the host Caddy configuration:
+
+```caddy
+motif.pandamia.org {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:18080
+}
+```
+
+Then reload host Caddy:
+
+```bash
+sudo systemctl reload caddy
+```
+
+Caddy will automatically manage HTTPS as long as:
+- `motif.pandamia.org` points to your server IP
+- ports `80` and `443` are open
 
 ## 6. Update the service
 
@@ -102,4 +97,10 @@ View logs:
 
 ```bash
 docker compose logs -f
+```
+
+Check app reachability from the host:
+
+```bash
+curl -I http://127.0.0.1:18080
 ```

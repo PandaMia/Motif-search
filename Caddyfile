@@ -1,4 +1,4 @@
 motif.pandamia.org {
     encode zstd gzip
-    reverse_proxy app:8080
+    reverse_proxy 127.0.0.1:18080
 }
